@@ -332,10 +332,13 @@ class _GalleryScreenState extends State<GalleryScreen> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _captureImage(context),
-        backgroundColor: Colors.blue,
-        child: const Icon(Icons.camera_alt),
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 50.0), // Add padding to position above bottom bar
+        child: FloatingActionButton(
+          onPressed: () => _captureImage(context),
+          backgroundColor: Colors.blue,
+          child: const Icon(Icons.camera_alt),
+        ),
       ),
     );
   }
