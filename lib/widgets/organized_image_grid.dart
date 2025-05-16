@@ -109,8 +109,8 @@ class OrganizedImageGrid extends StatelessWidget {
                       border: Border.all(
                         color: isSelected
                             ? Theme.of(context).primaryColor
-                            : Colors.black,
-                        width: isSelected ? 2 : 0.5,
+                            : Colors.transparent,
+                        width: isSelected ? 2 : 0,
                       ),
                     ),
                     child: Stack(
@@ -127,13 +127,14 @@ class OrganizedImageGrid extends StatelessWidget {
                           Container(
                             color:
                                 Theme.of(context).primaryColor.withOpacity(0.3),
-                            child: const Icon(
-                              Icons.check_circle,
-                              color: Colors.white,
-                              size: 24,
+                            child: const Center(
+                              child: Icon(
+                                Icons.check_circle,
+                                color: Colors.white,
+                                size: 28,
+                              ),
                             ),
                           ),
-                        // Add video duration overlay if it's a video
                         if (imageEntry.value.path
                             .toLowerCase()
                             .endsWith('.mp4'))

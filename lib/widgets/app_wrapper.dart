@@ -52,12 +52,15 @@ class _AppWrapperState extends State<AppWrapper> with WidgetsBindingObserver {
     if (!mounted) return;
 
     final isLocationEnabled = await geo.Geolocator.isLocationServiceEnabled();
-    final locationPermission = await geo.Geolocator.checkPermission();
+    if (!isLocationEnabled) {
+      await _showLocationDisabledDialog();
+      return;
+    }
 
-    if (!isLocationEnabled &&
-        locationPermission != geo.LocationPermission.denied &&
-        locationPermission != geo.LocationPermission.deniedForever) {
-      _showLocationDisabledDialog();
+    final locationPermission = await geo.Geolocator.checkPermission();
+    if (locationPermission == geo.LocationPermission.denied ||
+        locationPermission == geo.LocationPermission.deniedForever) {
+      await _checkLocationPermission();
     }
   }
 
@@ -73,7 +76,18 @@ class _AppWrapperState extends State<AppWrapper> with WidgetsBindingObserver {
     );
     _isShowingDialog = false;
 
-    if (mounted && result == false) {
+    if (result == true && mounted) {
+      // User chose to enable location services
+      await geo.Geolocator.openLocationSettings();
+      // Wait for a moment to allow the settings to open
+      await Future.delayed(const Duration(seconds: 1));
+      // Check if location services were enabled
+      final isEnabled = await geo.Geolocator.isLocationServiceEnabled();
+      if (isEnabled && mounted) {
+        // Location services are now enabled, check permission
+        await _checkLocationPermission();
+      }
+    } else if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content:

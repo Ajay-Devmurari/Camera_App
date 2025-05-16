@@ -10,7 +10,6 @@ import '../models/image_details.dart';
 class ImageViewScreen extends StatefulWidget {
   final String imagePath;
   final String tag;
-  final VoidCallback? onDelete;
   final VoidCallback? onShowDetails;
   final ImageDetails imageDetails;
 
@@ -19,7 +18,6 @@ class ImageViewScreen extends StatefulWidget {
     required this.imagePath,
     required this.tag,
     required this.imageDetails,
-    this.onDelete,
     this.onShowDetails,
   });
 
@@ -254,36 +252,21 @@ class _ImageViewScreenState extends State<ImageViewScreen> {
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: Colors.black,
         iconTheme: const IconThemeData(color: Colors.white),
         actions: [
-          if (hasLocation)
+          if (widget.imageDetails.latitude != null) ...[
             IconButton(
               icon: Icon(
                 _showMap ? Icons.image : Icons.location_on,
                 color: Colors.white,
               ),
-              onPressed: () {
-                setState(() {
-                  _showMap = !_showMap;
-                });
-              },
-              tooltip: _showMap ? 'Hide Location' : 'Show Location',
+              onPressed: () => setState(() => _showMap = !_showMap),
             ),
+          ],
           IconButton(
-            icon: const Icon(Icons.info_outline),
+            icon: const Icon(Icons.info_outline, color: Colors.white),
             onPressed: widget.onShowDetails,
-            tooltip: 'Photo Information',
-          ),
-          IconButton(
-            icon: const Icon(Icons.share),
-            onPressed: _shareImage,
-            tooltip: 'Share',
-          ),
-          IconButton(
-            icon: const Icon(Icons.delete),
-            onPressed: () => _showDeleteDialog(context),
-            tooltip: 'Delete',
           ),
         ],
       ),
@@ -305,47 +288,6 @@ class _ImageViewScreenState extends State<ImageViewScreen> {
               bottom: 0,
               child: _buildLocationOverlay(),
             ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _shareImage() async {
-    try {
-      final file = File(widget.imagePath);
-      if (await file.exists()) {
-        await Share.shareXFiles([
-          XFile(widget.imagePath),
-        ], text: 'Check out this image!');
-      } else {
-        debugPrint('Image file not found: ${widget.imagePath}');
-      }
-    } catch (e) {
-      debugPrint('Share error: $e');
-    }
-  }
-
-  void _showDeleteDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete'),
-        content: const Text('Do you want to delete this photo?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('No'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              if (widget.onDelete != null) {
-                widget.onDelete!();
-              }
-              Navigator.pop(context);
-            },
-            child: const Text('Yes'),
-          ),
         ],
       ),
     );

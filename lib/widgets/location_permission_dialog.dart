@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:geolocator/geolocator.dart';
 
 enum LocationPermissionOption { always, whileInUse, onlyThisTime, deny }
 
@@ -119,8 +120,22 @@ class LocationPermissionDialog extends StatelessWidget {
 
   Future<void> _handlePermission(
       BuildContext context, LocationPermissionOption option) async {
-    PermissionStatus status;
+    // First check if location services are enabled
+    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      // Location services are not enabled, open location settings
+      await Geolocator.openLocationSettings();
+      // Wait for a moment to allow the settings to open
+      await Future.delayed(const Duration(seconds: 1));
+      // Check again if location services are enabled
+      serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled && context.mounted) {
+        Navigator.pop(context, false);
+        return;
+      }
+    }
 
+    PermissionStatus status;
     switch (option) {
       case LocationPermissionOption.always:
         status = await Permission.locationAlways.request();

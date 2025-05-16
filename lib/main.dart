@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:gallery_app/screens/home_screen.dart';
-import 'package:gallery_app/widgets/app_wrapper.dart';
+import 'screens/gallery_screen.dart';
+import 'services/storage_service.dart';
+import 'models/image_details.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -34,10 +35,53 @@ class MyApp extends StatelessWidget {
         ),
         useMaterial3: true,
       ),
-      home: const AppWrapper(
-        child: HomeScreen(),
-      ),
+      home: const GalleryPage(),
     );
+  }
+}
+
+class GalleryPage extends StatefulWidget {
+  const GalleryPage({super.key});
+
+  @override
+  State<GalleryPage> createState() => _GalleryPageState();
+}
+
+class _GalleryPageState extends State<GalleryPage> {
+  final List<ImageDetails> _images = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSavedImages();
+  }
+
+  Future<void> _loadSavedImages() async {
+    try {
+      final savedImages = await StorageService.loadSavedImages();
+      setState(() {
+        _images.addAll(savedImages);
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    return GalleryScreen(images: _images);
   }
 }
 
