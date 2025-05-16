@@ -252,108 +252,7 @@ class _GalleryScreenState extends State<GalleryScreen> {
                         },
                       ),
               ),
-              Container(
-                color: Colors.grey[300],
-                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-                child: Row(
-                  children: [
-                    // Sort button
-                    IconButton(
-                      icon: Icon(
-                        _isNewestFirst ? Icons.arrow_downward : Icons.arrow_upward,
-                        color: Colors.grey[700],
-                        size: 20,
-                      ),
-                      tooltip: _isNewestFirst ? 'Newest first' : 'Oldest first',
-                      onPressed: () {
-                        setState(() {
-                          _isNewestFirst = !_isNewestFirst;
-                        });
-                      },
-                    ),
-                    Expanded(
-                      child: Container(
-                        height: 36,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(18),
-                        ),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: GestureDetector(
-                                onTap: () {
-                                  setState(() {
-                                    _isDateView = true;
-                                  });
-                                },
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                    color: _isDateView
-                                        ? Colors.white
-                                        : Colors.transparent,
-                                    borderRadius: BorderRadius.circular(18),
-                                  ),
-                                  child: Center(
-                                    child: Text(
-                                      'Date',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.w500,
-                                        color: _isDateView
-                                            ? Colors.black
-                                            : Colors.black45,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                            Expanded(
-                              child: GestureDetector(
-                                onTap: () {
-                                  setState(() {
-                                    _isDateView = false;
-                                  });
-                                },
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                    color: !_isDateView
-                                        ? Colors.white
-                                        : Colors.transparent,
-                                    borderRadius: BorderRadius.circular(18),
-                                  ),
-                                  child: Center(
-                                    child: Text(
-                                      'Month',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.w500,
-                                        color: !_isDateView
-                                            ? Colors.black
-                                            : Colors.black45,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    IconButton(
-                      icon: Icon(
-                        Icons.more_vert,
-                        color: _selectedImages.length > 1 ? Colors.blue : Colors.grey,
-                      ),
-                      onPressed: _selectedImages.length > 1
-                          ? () {
-                              _showExportMenu(context);
-                            }
-                          : null,
-                    ),
-                  ],
-                ),
-              ),
+              // Removed bottom bar
             ],
           ),
           // Selection bottom bar - only shown when in selection mode
@@ -407,18 +306,143 @@ class _GalleryScreenState extends State<GalleryScreen> {
                 ),
               ),
             ),
+            
+          // Floating action buttons - only shown when not in selection mode
+          if (!_isSelectionMode) ...[  
+            // Sort button (left)
+            Positioned(
+              left: 16,
+              bottom: 16,
+              child: SizedBox(
+                height: 42, // Smaller size
+                width: 42,
+                child: FloatingActionButton(
+                  heroTag: 'sort',
+                  mini: true,
+                  elevation: 3,
+                  backgroundColor: Colors.white,
+                  onPressed: () {
+                    setState(() {
+                      _isNewestFirst = !_isNewestFirst;
+                    });
+                  },
+                  child: Icon(
+                    _isNewestFirst ? Icons.arrow_downward : Icons.arrow_upward,
+                    color: Colors.black,
+                    size: 20,
+                  ),
+                ),
+              ),
+            ),
+            
+            // Category button (center)
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 16,
+              child: Center(
+                child: Container(
+                  height: 36, // Smaller size
+                  width: 100,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(18),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.2),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              _isDateView = true;
+                            });
+                          },
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: _isDateView
+                                  ? Colors.blue.withOpacity(0.2)
+                                  : Colors.transparent,
+                              borderRadius: const BorderRadius.horizontal(left: Radius.circular(18)),
+                            ),
+                            child: Center(
+                              child: Text(
+                                'Date',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                  color: _isDateView
+                                      ? Colors.blue
+                                      : Colors.black45,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              _isDateView = false;
+                            });
+                          },
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: !_isDateView
+                                  ? Colors.blue.withOpacity(0.2)
+                                  : Colors.transparent,
+                              borderRadius: const BorderRadius.horizontal(right: Radius.circular(18)),
+                            ),
+                            child: Center(
+                              child: Text(
+                                'Month',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                  color: !_isDateView
+                                      ? Colors.blue
+                                      : Colors.black45,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            
+            // Camera button (right)
+            Positioned(
+              right: 16,
+              bottom: 16,
+              child: SizedBox(
+                height: 42, // Smaller size
+                width: 42,
+                child: FloatingActionButton(
+                  heroTag: 'camera',
+                  mini: true,
+                  elevation: 3,
+                  backgroundColor: Colors.blue,
+                  onPressed: () => _captureImage(context),
+                  child: const Icon(Icons.camera_alt, size: 20),
+                ),
+              ),
+            ),
+          ],
         ],
       ),
-      floatingActionButton: !_isSelectionMode
-          ? Padding(
-              padding: const EdgeInsets.only(bottom: 50.0),
-              child: FloatingActionButton(
-                onPressed: () => _captureImage(context),
-                backgroundColor: Colors.blue,
-                child: const Icon(Icons.camera_alt),
-              ),
-            )
-          : null,
+      floatingActionButton: null, // Removed in favor of multiple floating buttons
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
   
