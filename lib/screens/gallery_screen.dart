@@ -573,17 +573,6 @@ class _GalleryScreenState extends State<GalleryScreen> {
               borderRadius: BorderRadius.circular(2),
             ),
           ),
-          ListTile(
-            leading: const Icon(Icons.ios_share, color: Colors.blue),
-            title: const Text('Share', style: TextStyle(color: Colors.white)),
-            subtitle: const Text('Share selected images with others', 
-              style: TextStyle(color: Colors.grey)),
-            onTap: () {
-              Navigator.pop(context);
-              _shareSelectedImages();
-            },
-          ),
-          const Divider(height: 1, color: Colors.grey),
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: Text(
