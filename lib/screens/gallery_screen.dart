@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../models/image_details.dart';
 import 'package:intl/intl.dart';
@@ -252,61 +253,75 @@ class _GalleryScreenState extends State<GalleryScreen> {
                         },
                       ),
               ),
-              // Removed bottom bar
             ],
           ),
-          // Selection bottom bar - only shown when in selection mode
+          
+          // iOS-style blurred selection bottom bar - only shown when in selection mode
           if (_isSelectionMode)
             Positioned(
               left: 0,
               right: 0,
               bottom: 0,
-              child: Material(
-                elevation: 8,
-                color: Colors.black,
-                child: Container(
-                  height: 60,
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      // Share button
-                      IconButton(
-                        icon: const Icon(
-                          Icons.ios_share,
-                          color: Colors.blue,
-                          size: 28,
-                        ),
-                        onPressed: _selectedImages.isNotEmpty
-                            ? () => _shareSelectedImages()
-                            : null,
+              child: ClipRect(
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                  child: Container(
+                    height: 60,
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.black.withOpacity(0.7),
+                          Colors.black.withOpacity(0.85),
+                        ],
                       ),
-                      // Selected count
-                      Text(
-                        '${_selectedImages.length} ${_selectedImages.length == 1 ? "Item" : "Items"}',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                        ),
+                      border: Border(
+                        top: BorderSide(color: Colors.grey.withOpacity(0.3), width: 0.5),
                       ),
-                      // Menu button
-                      IconButton(
-                        icon: const Icon(
-                          Icons.more_horiz,
-                          color: Colors.blue,
-                          size: 28,
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        // Share button
+                        IconButton(
+                          icon: const Icon(
+                            Icons.ios_share,
+                            color: Colors.blue,
+                            size: 28,
+                          ),
+                          onPressed: _selectedImages.isNotEmpty
+                              ? () => _shareSelectedImages()
+                              : null,
                         ),
-                        onPressed: _selectedImages.isNotEmpty
-                            ? () => _showExportMenu(context)
-                            : null,
-                      ),
-                    ],
+                        // Selected count
+                        Text(
+                          '${_selectedImages.length} ${_selectedImages.length == 1 ? "Item" : "Items"}',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        // Menu button
+                        IconButton(
+                          icon: const Icon(
+                            Icons.more_horiz,
+                            color: Colors.blue,
+                            size: 28,
+                          ),
+                          onPressed: _selectedImages.isNotEmpty
+                              ? () => _showExportMenu(context)
+                              : null,
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
             ),
-            
+          
           // Floating action buttons - only shown when not in selection mode
           if (!_isSelectionMode) ...[  
             // Sort button (left)
