@@ -6,6 +6,9 @@ import 'package:image_picker/image_picker.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
+import '../services/export_service.dart';
+import 'package:open_file/open_file.dart';
+import 'package:share_plus/share_plus.dart';
 
 class GalleryScreen extends StatefulWidget {
   final List<ImageDetails> images;
@@ -93,253 +96,329 @@ class _GalleryScreenState extends State<GalleryScreen> {
           ),
         ),
         actions: [
-          TextButton(
-            onPressed: () {
-              setState(() {
-                _isSelectionMode = !_isSelectionMode;
-                if (!_isSelectionMode) {
-                  _selectedImages.clear();
-                }
-              });
-            },
-            child: Text(
-              _isSelectionMode ? 'Cancel' : 'Select',
-              style: const TextStyle(
-                color: Colors.black,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-          IconButton(
-            icon: const Icon(Icons.settings, color: Colors.black),
-            onPressed: () {
-              // Open settings
-            },
-          ),
-        ],
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: widget.images.isEmpty
-                ? const Center(
-                    child: Text(
-                      'No photos found',
-                      style: TextStyle(color: Colors.black54),
-                    ),
-                  )
-                : ListView.builder(
-                    itemCount: dateKeys.length,
-                    itemBuilder: (context, index) {
-                      final dateKey = dateKeys[index];
-                      final imagesForDate = organizedImages[dateKey]!;
-
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                            child: Text(
-                              _formatDateHeader(dateKey),
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.black87,
-                              ),
-                            ),
-                          ),
-                          GridView.builder(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            padding: const EdgeInsets.symmetric(horizontal: 4),
-                            gridDelegate:
-                                const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 3,
-                              crossAxisSpacing: 2,
-                              mainAxisSpacing: 2,
-                            ),
-                            itemCount: imagesForDate.length,
-                            itemBuilder: (context, imageIndex) {
-                              final imagePath = imagesForDate[imageIndex].path;
-                              final isSelected =
-                                  _selectedImages.contains(imagePath);
-
-                              return GestureDetector(
-                                onTap: () {
-                                  if (_isSelectionMode) {
-                                    setState(() {
-                                      if (isSelected) {
-                                        _selectedImages.remove(imagePath);
-                                      } else {
-                                        _selectedImages.add(imagePath);
-                                      }
-                                    });
-                                  } else {
-                                    // View image
-                                    _viewImage(imagesForDate[imageIndex]);
-                                  }
-                                },
-                                onLongPress: () {
-                                  if (!_isSelectionMode) {
-                                    setState(() {
-                                      _isSelectionMode = true;
-                                      _selectedImages.add(imagePath);
-                                    });
-                                  }
-                                },
-                                child: Stack(
-                                  fit: StackFit.expand,
-                                  children: [
-                                    Image.file(
-                                      File(imagePath),
-                                      fit: BoxFit.cover,
-                                    ),
-                                    if (_isSelectionMode)
-                                      Positioned(
-                                        top: 8,
-                                        right: 8,
-                                        child: Container(
-                                          width: 24,
-                                          height: 24,
-                                          decoration: BoxDecoration(
-                                            color: isSelected
-                                                ? Colors.blue
-                                                : Colors.white.withOpacity(0.7),
-                                            shape: BoxShape.circle,
-                                            border: Border.all(
-                                              color: Colors.white,
-                                              width: 2,
-                                            ),
-                                          ),
-                                          child: isSelected
-                                              ? const Icon(
-                                                  Icons.check,
-                                                  color: Colors.white,
-                                                  size: 16,
-                                                )
-                                              : null,
-                                        ),
-                                      ),
-                                  ],
-                                ),
-                              );
-                            },
-                          ),
-                        ],
-                      );
-                    },
-                  ),
-          ),
-          Container(
-            color: Colors.grey[300],
-            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-            child: Row(
-              children: [
-                // Sort button
-                IconButton(
-                  icon: Icon(
-                    _isNewestFirst ? Icons.arrow_downward : Icons.arrow_upward,
-                    color: Colors.grey[700],
-                    size: 20,
-                  ),
-                  tooltip: _isNewestFirst ? 'Newest first' : 'Oldest first',
+          _isSelectionMode
+              ? TextButton(
                   onPressed: () {
                     setState(() {
-                      _isNewestFirst = !_isNewestFirst;
+                      _isSelectionMode = false;
+                      _selectedImages.clear();
                     });
                   },
-                ),
-                Expanded(
-                  child: Container(
-                    height: 36,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(18),
-                    ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: GestureDetector(
-                            onTap: () {
-                              setState(() {
-                                _isDateView = true;
-                              });
-                            },
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: _isDateView
-                                    ? Colors.white
-                                    : Colors.transparent,
-                                borderRadius: BorderRadius.circular(18),
-                              ),
-                              child: Center(
-                                child: Text(
-                                  'Date',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w500,
-                                    color: _isDateView
-                                        ? Colors.black
-                                        : Colors.black45,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                        Expanded(
-                          child: GestureDetector(
-                            onTap: () {
-                              setState(() {
-                                _isDateView = false;
-                              });
-                            },
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: !_isDateView
-                                    ? Colors.white
-                                    : Colors.transparent,
-                                borderRadius: BorderRadius.circular(18),
-                              ),
-                              child: Center(
-                                child: Text(
-                                  'Month',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w500,
-                                    color: !_isDateView
-                                        ? Colors.black
-                                        : Colors.black45,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
+                  child: const Text(
+                    'Cancel',
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
-                ),
-                IconButton(
-                  icon: const Icon(
-                    Icons.more_vert,
-                    color: Colors.grey,
-                  ),
+                )
+              : TextButton(
                   onPressed: () {
-                    // Show more options menu
+                    setState(() {
+                      _isSelectionMode = true;
+                    });
                   },
+                  child: const Text(
+                    'Select',
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
                 ),
-              ],
+          if (!_isSelectionMode)
+            IconButton(
+              icon: const Icon(Icons.settings, color: Colors.black),
+              onPressed: () {
+                // Open settings
+              },
             ),
-          ),
         ],
       ),
-      floatingActionButton: Padding(
-        padding: const EdgeInsets.only(bottom: 50.0), // Add padding to position above bottom bar
-        child: FloatingActionButton(
-          onPressed: () => _captureImage(context),
-          backgroundColor: Colors.blue,
-          child: const Icon(Icons.camera_alt),
-        ),
+      body: Stack(
+        children: [
+          Column(
+            children: [
+              Expanded(
+                child: widget.images.isEmpty
+                    ? const Center(
+                        child: Text(
+                          'No photos found',
+                          style: TextStyle(color: Colors.black54),
+                        ),
+                      )
+                    : ListView.builder(
+                        itemCount: dateKeys.length,
+                        itemBuilder: (context, index) {
+                          final dateKey = dateKeys[index];
+                          final imagesForDate = organizedImages[dateKey]!;
+
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                                child: Text(
+                                  _formatDateHeader(dateKey),
+                                  style: const TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black87,
+                                  ),
+                                ),
+                              ),
+                              GridView.builder(
+                                shrinkWrap: true,
+                                physics: const NeverScrollableScrollPhysics(),
+                                padding: const EdgeInsets.symmetric(horizontal: 4),
+                                gridDelegate:
+                                    const SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: 3,
+                                  crossAxisSpacing: 2,
+                                  mainAxisSpacing: 2,
+                                ),
+                                itemCount: imagesForDate.length,
+                                itemBuilder: (context, imageIndex) {
+                                  final imagePath = imagesForDate[imageIndex].path;
+                                  final isSelected =
+                                      _selectedImages.contains(imagePath);
+
+                                  return GestureDetector(
+                                    onTap: () {
+                                      if (_isSelectionMode) {
+                                        setState(() {
+                                          if (isSelected) {
+                                            _selectedImages.remove(imagePath);
+                                            if (_selectedImages.isEmpty) {
+                                              _isSelectionMode = false;
+                                            }
+                                          } else {
+                                            _selectedImages.add(imagePath);
+                                          }
+                                        });
+                                      } else {
+                                        // View image
+                                        _viewImage(imagesForDate[imageIndex]);
+                                      }
+                                    },
+                                    onLongPress: () {
+                                      if (!_isSelectionMode) {
+                                        setState(() {
+                                          _isSelectionMode = true;
+                                          _selectedImages.add(imagePath);
+                                        });
+                                      }
+                                    },
+                                    child: Stack(
+                                      fit: StackFit.expand,
+                                      children: [
+                                        Image.file(
+                                          File(imagePath),
+                                          fit: BoxFit.cover,
+                                        ),
+                                        if (_isSelectionMode)
+                                          Positioned(
+                                            top: 8,
+                                            right: 8,
+                                            child: Container(
+                                              width: 24,
+                                              height: 24,
+                                              decoration: BoxDecoration(
+                                                color: isSelected
+                                                    ? Colors.blue
+                                                    : Colors.white.withOpacity(0.7),
+                                                shape: BoxShape.circle,
+                                                border: Border.all(
+                                                  color: Colors.white,
+                                                  width: 2,
+                                                ),
+                                              ),
+                                              child: isSelected
+                                                  ? const Icon(
+                                                      Icons.check,
+                                                      color: Colors.white,
+                                                      size: 16,
+                                                    )
+                                                  : null,
+                                            ),
+                                          ),
+                                      ],
+                                    ),
+                                  );
+                                },
+                              ),
+                            ],
+                          );
+                        },
+                      ),
+              ),
+              Container(
+                color: Colors.grey[300],
+                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                child: Row(
+                  children: [
+                    // Sort button
+                    IconButton(
+                      icon: Icon(
+                        _isNewestFirst ? Icons.arrow_downward : Icons.arrow_upward,
+                        color: Colors.grey[700],
+                        size: 20,
+                      ),
+                      tooltip: _isNewestFirst ? 'Newest first' : 'Oldest first',
+                      onPressed: () {
+                        setState(() {
+                          _isNewestFirst = !_isNewestFirst;
+                        });
+                      },
+                    ),
+                    Expanded(
+                      child: Container(
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(18),
+                        ),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: GestureDetector(
+                                onTap: () {
+                                  setState(() {
+                                    _isDateView = true;
+                                  });
+                                },
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: _isDateView
+                                        ? Colors.white
+                                        : Colors.transparent,
+                                    borderRadius: BorderRadius.circular(18),
+                                  ),
+                                  child: Center(
+                                    child: Text(
+                                      'Date',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w500,
+                                        color: _isDateView
+                                            ? Colors.black
+                                            : Colors.black45,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            Expanded(
+                              child: GestureDetector(
+                                onTap: () {
+                                  setState(() {
+                                    _isDateView = false;
+                                  });
+                                },
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: !_isDateView
+                                        ? Colors.white
+                                        : Colors.transparent,
+                                    borderRadius: BorderRadius.circular(18),
+                                  ),
+                                  child: Center(
+                                    child: Text(
+                                      'Month',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w500,
+                                        color: !_isDateView
+                                            ? Colors.black
+                                            : Colors.black45,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      icon: Icon(
+                        Icons.more_vert,
+                        color: _selectedImages.length > 1 ? Colors.blue : Colors.grey,
+                      ),
+                      onPressed: _selectedImages.length > 1
+                          ? () {
+                              _showExportMenu(context);
+                            }
+                          : null,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          // Selection bottom bar - only shown when in selection mode
+          if (_isSelectionMode)
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: Material(
+                elevation: 8,
+                color: Colors.black,
+                child: Container(
+                  height: 60,
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      // Share button
+                      IconButton(
+                        icon: const Icon(
+                          Icons.ios_share,
+                          color: Colors.blue,
+                          size: 28,
+                        ),
+                        onPressed: _selectedImages.isNotEmpty
+                            ? () => _shareSelectedImages()
+                            : null,
+                      ),
+                      // Selected count
+                      Text(
+                        '${_selectedImages.length} ${_selectedImages.length == 1 ? "Item" : "Items"}',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      // Menu button
+                      IconButton(
+                        icon: const Icon(
+                          Icons.more_horiz,
+                          color: Colors.blue,
+                          size: 28,
+                        ),
+                        onPressed: _selectedImages.isNotEmpty
+                            ? () => _showExportMenu(context)
+                            : null,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+        ],
       ),
+      floatingActionButton: !_isSelectionMode
+          ? Padding(
+              padding: const EdgeInsets.only(bottom: 50.0),
+              child: FloatingActionButton(
+                onPressed: () => _captureImage(context),
+                backgroundColor: Colors.blue,
+                child: const Icon(Icons.camera_alt),
+              ),
+            )
+          : null,
     );
   }
   
@@ -473,6 +552,155 @@ class _GalleryScreenState extends State<GalleryScreen> {
     final name = path.basename(image.path);
     final permanentImage = await File(image.path).copy('${directory.path}/$name');
     return permanentImage.path;
+  }
+  
+  Future<void> _showExportMenu(BuildContext context) {
+    return showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.grey[900],
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 40,
+            height: 4,
+            margin: const EdgeInsets.symmetric(vertical: 12),
+            decoration: BoxDecoration(
+              color: Colors.grey[600],
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          ListTile(
+            leading: const Icon(Icons.ios_share, color: Colors.blue),
+            title: const Text('Share', style: TextStyle(color: Colors.white)),
+            subtitle: const Text('Share selected images with others', 
+              style: TextStyle(color: Colors.grey)),
+            onTap: () {
+              Navigator.pop(context);
+              _shareSelectedImages();
+            },
+          ),
+          const Divider(height: 1, color: Colors.grey),
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Text(
+              'Export Options',
+              style: TextStyle(
+                color: Colors.grey[400],
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          ListTile(
+            leading: const Icon(Icons.picture_as_pdf, color: Colors.red),
+            title: const Text('Export to PDF', style: TextStyle(color: Colors.white)),
+            subtitle: const Text('Create a PDF document with selected images',
+              style: TextStyle(color: Colors.grey)),
+            onTap: () {
+              Navigator.pop(context);
+              _exportSelectedImages('pdf');
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.table_chart, color: Colors.green),
+            title: const Text('Export to Excel', style: TextStyle(color: Colors.white)),
+            subtitle: const Text('Create a spreadsheet with image details',
+              style: TextStyle(color: Colors.grey)),
+            onTap: () {
+              Navigator.pop(context);
+              _exportSelectedImages('excel');
+            },
+          ),
+          const SizedBox(height: 16),
+        ],
+      ),
+    );
+  }
+  
+  Future<void> _exportSelectedImages(String format) async {
+    try {
+      // Get the selected image details
+      final List<ImageDetails> selectedImageDetails = [];
+      for (String path in _selectedImages) {
+        for (ImageDetails image in widget.images) {
+          if (image.path == path) {
+            selectedImageDetails.add(image);
+            break;
+          }
+        }
+      }
+      
+      if (selectedImageDetails.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No images selected')),
+        );
+        return;
+      }
+      
+      // Show loading indicator
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Exporting images...')),
+      );
+      
+      // Export based on format
+      String filePath;
+      if (format == 'excel') {
+        filePath = await ExportService.exportToExcel(selectedImageDetails);
+      } else {
+        filePath = await ExportService.exportToPDF(selectedImageDetails);
+      }
+      
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${selectedImageDetails.length} images exported successfully'),
+            action: SnackBarAction(
+              label: 'OPEN',
+              onPressed: () => OpenFile.open(filePath),
+            ),
+          ),
+        );
+      }
+    } catch(e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Export failed: $e')),
+        );
+      }
+    }
+  }
+  
+  Future<void> _shareSelectedImages() async {
+    try {
+      final List<XFile> filesToShare = _selectedImages.map((path) => XFile(path)).toList();
+      
+      if (filesToShare.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No images selected')),
+        );
+        return;
+      }
+      
+      await Share.shareXFiles(
+        filesToShare,
+        text: 'Sharing ${filesToShare.length} images',
+      );
+      
+      // Clear selection after sharing
+      setState(() {
+        _isSelectionMode = false;
+        _selectedImages.clear();
+      });
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Sharing failed: $e')),
+        );
+      }
+    }
   }
 
   void _viewImage(ImageDetails image) {
