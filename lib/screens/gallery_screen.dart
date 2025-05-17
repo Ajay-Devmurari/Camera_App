@@ -13,6 +13,7 @@ import 'package:share_plus/share_plus.dart';
 import '../services/location_service.dart';
 import '../widgets/map_dialog.dart';
 import '../services/maps_launcher_service.dart';
+import '../screens/settings_screen.dart';
 
 class GalleryScreen extends StatefulWidget {
   final List<ImageDetails> images;
@@ -103,20 +104,34 @@ class _GalleryScreenState extends State<GalleryScreen> {
         ),
         actions: [
           _isSelectionMode
-              ? TextButton(
-                  onPressed: () {
-                    setState(() {
-                      _isSelectionMode = false;
-                      _selectedImages.clear();
-                    });
-                  },
-                  child: const Text(
-                    'Cancel',
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontWeight: FontWeight.w500,
+              ? Row(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.share, color: Colors.black),
+                      onPressed: _shareSelectedImages,
+                      tooltip: 'Share selected photos',
                     ),
-                  ),
+                    IconButton(
+                      icon: const Icon(Icons.delete, color: Colors.black),
+                      onPressed: _deleteSelectedImages,
+                      tooltip: 'Delete selected photos',
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        setState(() {
+                          _isSelectionMode = false;
+                          _selectedImages.clear();
+                        });
+                      },
+                      child: const Text(
+                        'Cancel',
+                        style: TextStyle(
+                          color: Colors.black,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ],
                 )
               : TextButton(
                   onPressed: () {
@@ -136,7 +151,12 @@ class _GalleryScreenState extends State<GalleryScreen> {
             IconButton(
               icon: const Icon(Icons.settings, color: Colors.black),
               onPressed: () {
-                // Open settings
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const LocationSettingsScreen(),
+                  ),
+                );
               },
             ),
         ],
@@ -206,7 +226,6 @@ class _GalleryScreenState extends State<GalleryScreen> {
                                           }
                                         });
                                       } else {
-                                        // View image
                                         _viewImage(imagesForDate[imageIndex]);
                                       }
                                     },
@@ -466,34 +485,6 @@ class _GalleryScreenState extends State<GalleryScreen> {
               ),
             ),
           ],
-          if (_isSelectionMode && _selectedImages.isNotEmpty)
-            Positioned(
-              bottom: 16,
-              left: 0,
-              right: 0,
-              child: Center(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    FloatingActionButton.extended(
-                      heroTag: 'share',
-                      onPressed: _shareSelectedImages,
-                      icon: const Icon(Icons.share),
-                      label: const Text('Share'),
-                      backgroundColor: Colors.blue,
-                    ),
-                    const SizedBox(width: 16),
-                    FloatingActionButton.extended(
-                      heroTag: 'delete',
-                      onPressed: _deleteSelectedImages,
-                      icon: const Icon(Icons.delete),
-                      label: const Text('Delete'),
-                      backgroundColor: Colors.red,
-                    ),
-                  ],
-                ),
-              ),
-            ),
         ],
       ),
       floatingActionButton: _isSelectionMode
