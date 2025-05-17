@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'screens/gallery_screen.dart';
 import 'services/storage_service.dart';
+import 'services/location_service.dart';
 import 'models/image_details.dart';
 
 void main() {
@@ -50,11 +51,34 @@ class GalleryPage extends StatefulWidget {
 class _GalleryPageState extends State<GalleryPage> {
   final List<ImageDetails> _images = [];
   bool _isLoading = true;
+  bool _hasCheckedLocation = false;
 
   @override
   void initState() {
     super.initState();
     _loadSavedImages();
+    // We'll check location in didChangeDependencies since we need context
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Only check location services once after the widget is fully built
+    if (!_hasCheckedLocation) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _checkLocationServices();
+      });
+    }
+  }
+
+  Future<void> _checkLocationServices() async {
+    // Only check if the context is still valid
+    if (!mounted) return;
+
+    // Check and request location permissions
+    await LocationService.checkAndRequestLocationPermission(context);
+    // Mark that we've checked location
+    _hasCheckedLocation = true;
   }
 
   Future<void> _loadSavedImages() async {
@@ -70,11 +94,11 @@ class _GalleryPageState extends State<GalleryPage> {
       });
     }
   }
-  
+
   Future<void> _saveImages() async {
     await StorageService.saveImages(_images);
   }
-  
+
   void _onImageCaptured(ImageDetails imageDetails) {
     setState(() {
       _images.add(imageDetails);

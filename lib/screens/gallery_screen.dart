@@ -10,6 +10,9 @@ import 'package:path/path.dart' as path;
 import '../services/export_service.dart';
 import 'package:open_file/open_file.dart';
 import 'package:share_plus/share_plus.dart';
+import '../services/location_service.dart';
+import '../widgets/map_dialog.dart';
+import '../services/maps_launcher_service.dart';
 
 class GalleryScreen extends StatefulWidget {
   final List<ImageDetails> images;
@@ -34,9 +37,11 @@ class _GalleryScreenState extends State<GalleryScreen> {
   List<ImageDetails> get _sortedImages {
     final sortedList = List<ImageDetails>.from(widget.images);
     if (_isNewestFirst) {
-      sortedList.sort((a, b) => b.timestamp.compareTo(a.timestamp)); // Newest first
+      sortedList
+          .sort((a, b) => b.timestamp.compareTo(a.timestamp)); // Newest first
     } else {
-      sortedList.sort((a, b) => a.timestamp.compareTo(b.timestamp)); // Oldest first
+      sortedList
+          .sort((a, b) => a.timestamp.compareTo(b.timestamp)); // Oldest first
     }
     return sortedList;
   }
@@ -158,7 +163,8 @@ class _GalleryScreenState extends State<GalleryScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Padding(
-                                padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                                padding:
+                                    const EdgeInsets.fromLTRB(16, 16, 16, 8),
                                 child: Text(
                                   _formatDateHeader(dateKey),
                                   style: const TextStyle(
@@ -171,7 +177,8 @@ class _GalleryScreenState extends State<GalleryScreen> {
                               GridView.builder(
                                 shrinkWrap: true,
                                 physics: const NeverScrollableScrollPhysics(),
-                                padding: const EdgeInsets.symmetric(horizontal: 4),
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 4),
                                 gridDelegate:
                                     const SliverGridDelegateWithFixedCrossAxisCount(
                                   crossAxisCount: 3,
@@ -180,7 +187,8 @@ class _GalleryScreenState extends State<GalleryScreen> {
                                 ),
                                 itemCount: imagesForDate.length,
                                 itemBuilder: (context, imageIndex) {
-                                  final imagePath = imagesForDate[imageIndex].path;
+                                  final imagePath =
+                                      imagesForDate[imageIndex].path;
                                   final isSelected =
                                       _selectedImages.contains(imagePath);
 
@@ -227,7 +235,8 @@ class _GalleryScreenState extends State<GalleryScreen> {
                                               decoration: BoxDecoration(
                                                 color: isSelected
                                                     ? Colors.blue
-                                                    : Colors.white.withOpacity(0.7),
+                                                    : Colors.white
+                                                        .withOpacity(0.7),
                                                 shape: BoxShape.circle,
                                                 border: Border.all(
                                                   color: Colors.white,
@@ -255,7 +264,7 @@ class _GalleryScreenState extends State<GalleryScreen> {
               ),
             ],
           ),
-          
+
           // iOS-style blurred selection bottom bar - only shown when in selection mode
           if (_isSelectionMode)
             Positioned(
@@ -278,7 +287,8 @@ class _GalleryScreenState extends State<GalleryScreen> {
                         ],
                       ),
                       border: Border(
-                        top: BorderSide(color: Colors.grey.withOpacity(0.3), width: 0.5),
+                        top: BorderSide(
+                            color: Colors.grey.withOpacity(0.3), width: 0.5),
                       ),
                     ),
                     child: Row(
@@ -321,9 +331,9 @@ class _GalleryScreenState extends State<GalleryScreen> {
                 ),
               ),
             ),
-          
+
           // Floating action buttons - only shown when not in selection mode
-          if (!_isSelectionMode) ...[  
+          if (!_isSelectionMode) ...[
             // Sort button (left)
             Positioned(
               left: 16,
@@ -349,7 +359,7 @@ class _GalleryScreenState extends State<GalleryScreen> {
                 ),
               ),
             ),
-            
+
             // Category button (center)
             Positioned(
               left: 0,
@@ -384,7 +394,8 @@ class _GalleryScreenState extends State<GalleryScreen> {
                               color: _isDateView
                                   ? Colors.blue.withOpacity(0.2)
                                   : Colors.transparent,
-                              borderRadius: const BorderRadius.horizontal(left: Radius.circular(18)),
+                              borderRadius: const BorderRadius.horizontal(
+                                  left: Radius.circular(18)),
                             ),
                             child: Center(
                               child: Text(
@@ -413,7 +424,8 @@ class _GalleryScreenState extends State<GalleryScreen> {
                               color: !_isDateView
                                   ? Colors.blue.withOpacity(0.2)
                                   : Colors.transparent,
-                              borderRadius: const BorderRadius.horizontal(right: Radius.circular(18)),
+                              borderRadius: const BorderRadius.horizontal(
+                                  right: Radius.circular(18)),
                             ),
                             child: Center(
                               child: Text(
@@ -435,7 +447,7 @@ class _GalleryScreenState extends State<GalleryScreen> {
                 ),
               ),
             ),
-            
+
             // Camera button (right)
             Positioned(
               right: 16,
@@ -448,151 +460,114 @@ class _GalleryScreenState extends State<GalleryScreen> {
                   mini: true,
                   elevation: 3,
                   backgroundColor: Colors.blue,
-                  onPressed: () => _captureImage(context),
+                  onPressed: () => _takePicture(context),
                   child: const Icon(Icons.camera_alt, size: 20),
                 ),
               ),
             ),
           ],
+          if (_isSelectionMode && _selectedImages.isNotEmpty)
+            Positioned(
+              bottom: 16,
+              left: 0,
+              right: 0,
+              child: Center(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    FloatingActionButton.extended(
+                      heroTag: 'share',
+                      onPressed: _shareSelectedImages,
+                      icon: const Icon(Icons.share),
+                      label: const Text('Share'),
+                      backgroundColor: Colors.blue,
+                    ),
+                    const SizedBox(width: 16),
+                    FloatingActionButton.extended(
+                      heroTag: 'delete',
+                      onPressed: _deleteSelectedImages,
+                      icon: const Icon(Icons.delete),
+                      label: const Text('Delete'),
+                      backgroundColor: Colors.red,
+                    ),
+                  ],
+                ),
+              ),
+            ),
         ],
       ),
-      floatingActionButton: null, // Removed in favor of multiple floating buttons
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+      floatingActionButton: _isSelectionMode
+          ? null
+          : FloatingActionButton(
+              onPressed: () => _takePicture(context),
+              backgroundColor: Colors.blue,
+              child: const Icon(Icons.camera_alt, color: Colors.white),
+            ),
     );
   }
-  
-  Future<void> _captureImage(BuildContext context) async {
+
+  Future<void> _takePicture(BuildContext context) async {
+    // Check location permissions without showing dialogs if already granted
+    final hasLocationPermission =
+        await LocationService.checkAndRequestLocationPermission(context);
+
+    // Continue with taking picture regardless of location permission
     final ImagePicker picker = ImagePicker();
     final XFile? image = await picker.pickImage(source: ImageSource.camera);
 
     if (image != null) {
-      // Start getting location and saving image in parallel
-      final Future<Position?> positionFuture = _getCurrentLocation(context);
-      final Future<String> savedImagePathFuture = _saveImagePermanently(image);
+      // Get location if permission was granted
+      Position? position;
+      if (hasLocationPermission) {
+        try {
+          position = await Geolocator.getCurrentPosition(
+            desiredAccuracy: LocationAccuracy.high,
+            timeLimit: const Duration(seconds: 5),
+          );
+        } catch (e) {
+          // Silently fail if location can't be obtained
+          print('Error getting location: $e');
+        }
+      }
 
-      // Wait for both operations to complete
-      final List<dynamic> results = await Future.wait([
-        positionFuture,
-        savedImagePathFuture,
-      ]);
+      // Save the image
+      final directory = await getApplicationDocumentsDirectory();
+      final fileName =
+          DateTime.now().millisecondsSinceEpoch.toString() + '.jpg';
+      final savedImage =
+          await File(image.path).copy('${directory.path}/$fileName');
 
-      final Position? position = results[0] as Position?;
-      final String savedImagePath = results[1] as String;
-
+      // Create image details
       final imageDetails = ImageDetails(
-        path: savedImagePath,
+        path: savedImage.path,
         timestamp: DateTime.now(),
         latitude: position?.latitude,
         longitude: position?.longitude,
       );
+
+      // Add to the list and refresh UI
+      setState(() {
+        widget.images.add(imageDetails);
+      });
 
       // Call the callback if provided
       if (widget.onImageCaptured != null) {
         widget.onImageCaptured!(imageDetails);
       }
 
+      // Show success message
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Photo saved successfully'),
-            duration: Duration(seconds: 2),
+          SnackBar(
+            content: Text(
+                'Photo saved ${position != null ? 'with location' : 'without location'}'),
+            duration: const Duration(seconds: 2),
           ),
         );
       }
     }
   }
-  
-  Future<Position?> _getCurrentLocation(BuildContext context) async {
-    try {
-      // Check if location service is enabled
-      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-      if (!serviceEnabled) {
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Please enable location services in device settings'),
-              duration: Duration(seconds: 3),
-            ),
-          );
-        }
-        return null;
-      }
 
-      // Check permissions
-      LocationPermission permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.denied) {
-        permission = await Geolocator.requestPermission();
-        if (permission == LocationPermission.denied) {
-          if (context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Location permission denied'),
-                duration: Duration(seconds: 2),
-              ),
-            );
-          }
-          return null;
-        }
-      }
-
-      if (permission == LocationPermission.deniedForever) {
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Location permission permanently denied'),
-              duration: Duration(seconds: 2),
-            ),
-          );
-        }
-        return null;
-      }
-
-      // Get location
-      try {
-        return await Geolocator.getCurrentPosition(
-          desiredAccuracy: LocationAccuracy.medium,
-          timeLimit: const Duration(seconds: 10),
-        );
-      } catch (e) {
-        // Try to get last known position if current position times out
-        final lastPosition = await Geolocator.getLastKnownPosition();
-        if (lastPosition != null) return lastPosition;
-        
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Using approximate location due to timeout'),
-              duration: Duration(seconds: 2),
-            ),
-          );
-        }
-
-        // If no last position, try with lower accuracy
-        return await Geolocator.getCurrentPosition(
-          desiredAccuracy: LocationAccuracy.low,
-          timeLimit: const Duration(seconds: 5),
-        );
-      }
-    } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Could not get location, photo will be saved without location'),
-            duration: Duration(seconds: 2),
-          ),
-        );
-      }
-      return null;
-    }
-  }
-
-  Future<String> _saveImagePermanently(XFile image) async {
-    final directory = await getApplicationDocumentsDirectory();
-    final name = path.basename(image.path);
-    final permanentImage = await File(image.path).copy('${directory.path}/$name');
-    return permanentImage.path;
-  }
-  
   Future<void> _showExportMenu(BuildContext context) {
     return showModalBottomSheet(
       context: context,
@@ -624,9 +599,10 @@ class _GalleryScreenState extends State<GalleryScreen> {
           ),
           ListTile(
             leading: const Icon(Icons.picture_as_pdf, color: Colors.red),
-            title: const Text('Export to PDF', style: TextStyle(color: Colors.white)),
+            title: const Text('Export to PDF',
+                style: TextStyle(color: Colors.white)),
             subtitle: const Text('Create a PDF document with selected images',
-              style: TextStyle(color: Colors.grey)),
+                style: TextStyle(color: Colors.grey)),
             onTap: () {
               Navigator.pop(context);
               _exportSelectedImages('pdf');
@@ -634,9 +610,10 @@ class _GalleryScreenState extends State<GalleryScreen> {
           ),
           ListTile(
             leading: const Icon(Icons.table_chart, color: Colors.green),
-            title: const Text('Export to Excel', style: TextStyle(color: Colors.white)),
+            title: const Text('Export to Excel',
+                style: TextStyle(color: Colors.white)),
             subtitle: const Text('Create a spreadsheet with image details',
-              style: TextStyle(color: Colors.grey)),
+                style: TextStyle(color: Colors.grey)),
             onTap: () {
               Navigator.pop(context);
               _exportSelectedImages('excel');
@@ -647,7 +624,7 @@ class _GalleryScreenState extends State<GalleryScreen> {
       ),
     );
   }
-  
+
   Future<void> _exportSelectedImages(String format) async {
     try {
       // Get the selected image details
@@ -660,19 +637,19 @@ class _GalleryScreenState extends State<GalleryScreen> {
           }
         }
       }
-      
+
       if (selectedImageDetails.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('No images selected')),
         );
         return;
       }
-      
+
       // Show loading indicator
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Exporting images...')),
       );
-      
+
       // Export based on format
       String filePath;
       if (format == 'excel') {
@@ -680,11 +657,12 @@ class _GalleryScreenState extends State<GalleryScreen> {
       } else {
         filePath = await ExportService.exportToPDF(selectedImageDetails);
       }
-      
+
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('${selectedImageDetails.length} images exported successfully'),
+            content: Text(
+                '${selectedImageDetails.length} images exported successfully'),
             action: SnackBarAction(
               label: 'OPEN',
               onPressed: () => OpenFile.open(filePath),
@@ -692,7 +670,7 @@ class _GalleryScreenState extends State<GalleryScreen> {
           ),
         );
       }
-    } catch(e) {
+    } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Export failed: $e')),
@@ -700,60 +678,176 @@ class _GalleryScreenState extends State<GalleryScreen> {
       }
     }
   }
-  
+
   Future<void> _shareSelectedImages() async {
-    try {
-      final List<XFile> filesToShare = _selectedImages.map((path) => XFile(path)).toList();
-      
-      if (filesToShare.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No images selected')),
-        );
-        return;
-      }
-      
-      await Share.shareXFiles(
-        filesToShare,
-        text: 'Sharing ${filesToShare.length} images',
-      );
-      
-      // Clear selection after sharing
-      setState(() {
-        _isSelectionMode = false;
-        _selectedImages.clear();
-      });
-    } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Sharing failed: $e')),
-        );
-      }
-    }
+    if (_selectedImages.isEmpty) return;
+
+    final files = _selectedImages.map((path) => XFile(path)).toList();
+    await Share.shareXFiles(files,
+        text: 'Sharing ${_selectedImages.length} photos');
+
+    setState(() {
+      _isSelectionMode = false;
+      _selectedImages.clear();
+    });
+  }
+
+  void _deleteSelectedImages() {
+    if (_selectedImages.isEmpty) return;
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Photos'),
+        content: Text('Delete ${_selectedImages.length} photos?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+
+              // Remove the selected images
+              for (final path in _selectedImages) {
+                // Delete file
+                File(path).deleteSync();
+
+                // Remove from the list
+                widget.images.removeWhere((img) => img.path == path);
+              }
+
+              setState(() {
+                _isSelectionMode = false;
+                _selectedImages.clear();
+              });
+
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Photos deleted'),
+                  duration: Duration(seconds: 2),
+                ),
+              );
+            },
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
   }
 
   void _viewImage(ImageDetails image) {
-    // Navigate to image view
     showDialog(
       context: context,
       builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Image.file(File(image.path)),
+            Stack(
+              children: [
+                Image.file(File(image.path)),
+                if (image.latitude != null && image.longitude != null)
+                  Positioned(
+                    top: 8,
+                    right: 8,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.6),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: IconButton(
+                        icon:
+                            const Icon(Icons.location_on, color: Colors.white),
+                        onPressed: () {
+                          Navigator.pop(context);
+                          _showLocationOnMap(image);
+                        },
+                        tooltip: 'View Location',
+                      ),
+                    ),
+                  ),
+              ],
+            ),
             Padding(
               padding: const EdgeInsets.all(16.0),
-              child: Text(
-                'Taken on ${DateFormat('MMM d, yyyy').format(image.timestamp)}',
-                style: const TextStyle(fontWeight: FontWeight.bold),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Taken on ${DateFormat('MMM d, yyyy').format(image.timestamp)}',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  if (image.latitude != null && image.longitude != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8.0),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.location_on,
+                              size: 16, color: Colors.red),
+                          const SizedBox(width: 4),
+                          Text(
+                            'Location: ${image.latitude!.toStringAsFixed(6)}, ${image.longitude!.toStringAsFixed(6)}',
+                            style: const TextStyle(
+                                fontSize: 12, color: Colors.grey),
+                          ),
+                        ],
+                      ),
+                    ),
+                ],
               ),
             ),
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Close'),
+            ButtonBar(
+              alignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                TextButton.icon(
+                  onPressed: () => Navigator.pop(context),
+                  icon: const Icon(Icons.close),
+                  label: const Text('Close'),
+                ),
+                if (image.latitude != null && image.longitude != null)
+                  FilledButton.icon(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      _showLocationOnMap(image);
+                    },
+                    icon: const Icon(Icons.map),
+                    label: const Text('Show on Map'),
+                  ),
+              ],
             ),
           ],
         ),
       ),
     );
+  }
+
+  Future<void> _showLocationOnMap(ImageDetails image) async {
+    if (image.latitude == null || image.longitude == null) return;
+
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) => MapDialog(
+        latitude: image.latitude!,
+        longitude: image.longitude!,
+      ),
+    );
+
+    if (result == true) {
+      // User wants to open in maps app
+      final success = await MapsLauncherService.openMap(
+        image.latitude!,
+        image.longitude!,
+      );
+
+      if (!success && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Could not open maps app'),
+          ),
+        );
+      }
+    }
   }
 }
