@@ -61,8 +61,9 @@ class ExportService {
       ];
 
       for (var i = 0; i < rowData.length; i++) {
-        sheet.cell(CellIndex.indexByColumnRow(columnIndex: i, rowIndex: row))
-          ..value = rowData[i];
+        sheet
+            .cell(CellIndex.indexByColumnRow(columnIndex: i, rowIndex: row))
+            .value = rowData[i];
       }
       row++;
     }
@@ -124,7 +125,7 @@ class ExportService {
             pw.SizedBox(height: 20),
             pw.Table.fromTextArray(
               context: context,
-              headerDecoration: pw.BoxDecoration(
+              headerDecoration: const pw.BoxDecoration(
                 color: PdfColors.grey300,
               ),
               headerHeight: 25,
